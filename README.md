@@ -4,7 +4,7 @@ LangGraph-powered hierarchical multi-agent system for Bank AML & Fraud Detection
 
 ## Project Overview
 
-This repository demonstrates a **deterministic, LangGraph-based multi-agent workflow** for Anti-Money Laundering (AML) and fraud detection. A central **Supervisor Agent** orchestrates four specialist agents that work together to analyse a transaction, score its risk, and — when the risk is high enough — produce a Suspicious Activity Report (SAR) draft for human review.
+This repository demonstrates a **deterministic, LangGraph-based multi-agent workflow** for Anti-Money Laundering (AML) and fraud detection. A central **Supervisor Agent** orchestrates four specialist agents that work together to analyze a transaction, score its risk, and — when the risk is high enough — produce a Suspicious Activity Report (SAR) draft for human review.
 
 The demo is **fully self-contained**: it uses plain Python functions as graph nodes and requires no OpenAI or external API keys.
 

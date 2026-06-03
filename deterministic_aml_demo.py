@@ -21,6 +21,7 @@ Agents
 from typing import Any, Dict, List
 
 from langgraph.graph import END, StateGraph
+from langgraph.graph.state import CompiledStateGraph
 from typing_extensions import TypedDict
 
 
@@ -216,7 +217,7 @@ def route_next(state: AMLState) -> str:
 # Graph construction
 # ---------------------------------------------------------------------------
 
-def build_graph() -> "CompiledGraph":  # noqa: F821
+def build_graph() -> CompiledStateGraph:
     graph = StateGraph(AMLState)
 
     graph.add_node("supervisor_agent", supervisor_agent)
