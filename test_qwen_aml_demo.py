@@ -45,7 +45,7 @@ class QwenAMLDemoTests(unittest.TestCase):
             {"DASHSCOPE_API_KEY": "test-api-key", "QWEN_MODEL": "qwen-plus"},
             clear=True,
         ):
-            with patch("qwen_client.Generation.call", side_effect=responses) as mock_call:
+            with patch("dashscope.Generation.call", side_effect=responses) as mock_call:
                 app = qwen_aml_demo.build_graph(QwenClient())
                 result = app.invoke(qwen_aml_demo.sample_initial_state())
 

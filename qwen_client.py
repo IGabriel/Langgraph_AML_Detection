@@ -59,7 +59,7 @@ class QwenClient:
                 "or BAILIAN_API_KEY before running the Qwen AML demo."
             )
 
-        self.model = (model or os.getenv("QWEN_MODEL", "qwen-plus")).strip() or "qwen-plus"
+        self.model = (model.strip() if model and model.strip() else _first_env("QWEN_MODEL")) or "qwen-plus"
 
     def generate(self, system_prompt: str, user_prompt: str, temperature: float = 0.2) -> str:
         response = Generation.call(
