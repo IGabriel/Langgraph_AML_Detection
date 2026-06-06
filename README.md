@@ -1,12 +1,20 @@
 # Langgraph_AML_Detection
 
-LangGraph-powered hierarchical multi-agent system for Bank AML & Fraud Detection (Supervisor + Transaction Monitor + Behavioral Analyst + Risk Scorer + SAR Reporter).
+Version 1 of this repository is a **Qwen-only AML/Fraud Detection demo** built with LangGraph and Alibaba Cloud Bailian/DashScope native APIs.
 
-## Project Overview
+## Version 1 Overview
 
-This repository demonstrates a **deterministic, LangGraph-based multi-agent workflow** for Anti-Money Laundering (AML) and fraud detection. A central **Supervisor Agent** orchestrates four specialist agents that work together to analyze a transaction, score its risk, and — when the risk is high enough — produce a Suspicious Activity Report (SAR) draft for human review.
+This demo keeps the AML workflow explainable and compliance-safe:
 
-The demo is **fully self-contained**: it uses plain Python functions as graph nodes and requires no OpenAI or external API keys.
+- **Supervisor Agent**: deterministic routing for stability
+- **Transaction Monitoring Agent**: deterministic, rule-based checks
+- **Behavioral Analysis Agent**: uses **Qwen via DashScope/Bailian native API**
+- **Risk Scoring Agent**: deterministic, reproducible **0-100** score
+- **SAR Reporting Agent**: uses **Qwen via DashScope/Bailian native API** to draft a report
+
+This project **does not use the OpenAI Python SDK**, **does not use `openai.OpenAI`**, and **does not use Alibaba's OpenAI-compatible endpoint**. It calls **Qwen through the native DashScope/Bailian SDK** only.
+
+No OpenAI or any non-China LLM service is required.
 
 ## Architecture
 
@@ -14,62 +22,71 @@ The demo is **fully self-contained**: it uses plain Python functions as graph no
 Incoming Transaction
         │
         ▼
-Supervisor Agent          ← reads shared state; routes to next specialist
+Supervisor Agent                 ← deterministic routing
         │
-        ├──▶ Transaction Monitoring Agent   (rule-based checks)
+        ├──▶ Transaction Monitoring Agent   (deterministic / rule-based)
         │
-        ├──▶ Behavioral Analysis Agent      (deviation from customer norms)
+        ├──▶ Behavioral Analysis Agent      (Qwen via native DashScope/Bailian API)
         │
-        ├──▶ Risk Scoring Agent             (explainable 0-100 score)
+        ├──▶ Risk Scoring Agent             (deterministic / reproducible 0-100)
         │
-        └──▶ SAR Reporting Agent            (draft only — not auto-submitted)
+        └──▶ SAR Reporting Agent            (Qwen draft only — not auto-submitted)
                 │
                 ▼
         Human AML Analyst Review
         (manual approval required before any regulatory submission)
 ```
 
-## Agents
+## Files
 
-| Agent | Responsibility |
-|---|---|
-| **Supervisor Agent** | Reads the shared `AMLState` and routes execution to the appropriate specialist. Loops until all stages are complete or the transaction is cleared. |
-| **Transaction Monitoring Agent** | Rule-based checks: large transaction amount (≥ 10,000), high-risk country, and new counterparty. |
-| **Behavioral Analysis Agent** | Detects deviations from the customer's historical norms: amount > 5× average, unusual midnight-window hours, and sudden velocity spikes. |
-| **Risk Scoring Agent** | Aggregates findings from monitoring and behavioral analysis into an explainable 0–100 risk score. |
-| **SAR Reporting Agent** | Generates a formatted SAR **draft** when the risk score is ≥ 70. The draft is for human AML analyst review only — no automatic regulatory submission occurs. |
+- `qwen_client.py` — native DashScope/Bailian Qwen wrapper
+- `qwen_aml_demo.py` — Version 1 Qwen-only LangGraph AML demo
+- `deterministic_aml_demo.py` — original deterministic reference demo
+- `.env.example` — placeholder environment variables only
 
-## Quick Start
+## Setup
 
 ```bash
+python -m venv .venv
+source .venv/bin/activate
 pip install -r requirements.txt
-python deterministic_aml_demo.py
+cp .env.example .env
+export DASHSCOPE_API_KEY=...
+python qwen_aml_demo.py
 ```
 
-Expected output:
+Optional model override:
 
+```bash
+export QWEN_MODEL=qwen-plus
 ```
-=== Execution Trace ===
-  Supervisor routed to: monitoring_agent
-  Transaction monitoring completed: [...]
-  Supervisor routed to: behavior_agent
-  Behavioral analysis completed: [...]
-  Supervisor routed to: risk_agent
-  Risk scoring completed: score=100
-  Supervisor routed to: sar_agent
-  SAR draft generated (pending human review)
-  Supervisor routed to: END
 
-=== Risk Score ===
-  100 / 100
+The demo reads `DASHSCOPE_API_KEY` first and also accepts `BAILIAN_API_KEY` as a fallback. If no API key is configured, the program exits with a clear error instead of silently calling any external fallback service.
 
-=== SAR Report ===
-======================================================
-  SUSPICIOUS ACTIVITY REPORT — DRAFT (NOT SUBMITTED)
-======================================================
-...
-```
+## Expected Output
+
+The demo prints:
+
+- execution trace
+- deterministic risk score
+- Qwen behavioral findings
+- Qwen-generated SAR draft
 
 ## Compliance Notice
 
 The SAR generated by this demo is a **draft document intended for human AML analyst review only**. It must not be submitted to any regulatory authority without manual review and approval by a qualified compliance officer. No automated regulatory filing takes place.
+
+## Notes on Qwen Usage
+
+- **Behavioral Analysis Agent** uses Qwen to summarize behavioral anomalies from transaction context plus deterministic signals.
+- **SAR Reporting Agent** uses Qwen to generate a **draft only**.
+- **Transaction Monitoring Agent** and **Risk Scoring Agent** remain deterministic to preserve explainability and reproducibility.
+
+## Validation
+
+After installing dependencies, you can run:
+
+```bash
+python -m unittest -v
+python qwen_aml_demo.py
+```
